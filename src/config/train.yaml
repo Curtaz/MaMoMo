@@ -1,0 +1,47 @@
+defaults: 
+  - model: EGAT
+  - _self_
+
+experiment : QM9 # name of the experiment, influences wandb run names, models and logs directories
+target : band_gap
+num_workers : 0
+cluster_num_workers :  8
+deterministic : True
+
+home_dir : C:/Users/tomma/Documents/Uni/Magistrale/Internship/Code
+hydra:
+  run:
+    dir: ${home_dir}/MaMoMo/lightning/logs/${experiment}/${target}/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+logger:
+  project_name: MEGNet-${experiment}-locale
+  user: tcortecchia
+  logdir : ${home_dir}}/MaMoMo/lightning/logs/${experiment}/${target}
+
+train: 
+  do_bond_expansion: false
+  compile: false
+  spath : ${home_dir}/data
+  dpath : ${home_dir}}/MaMoMo/lightning/models/${experiment}/${target}
+  sfilename: ${experiment}_graphs.bin
+  splitfilename: ${experiment}_splits.json
+  
+  load_states: true
+  statesfilename: ${experiment}_states.bin
+  
+  load_and_split : true
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+
+  normalize: null # one of null, z_score, normalization, log
+  infofile: ${experiment}_info.json
+
+  base_lr : 0.001
+  num_epochs : 500
+  batch_size : 64
+
+predict: 
+  specify_checkpoint: False
+  ckpt_path: null
+  

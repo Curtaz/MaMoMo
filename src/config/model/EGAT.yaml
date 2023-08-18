@@ -1,0 +1,12 @@
+name: 'EGAT'
+num_node_types: 93 # 92 elements of the periodic table + a special type for masked nodes
+node_embed_dim: 16
+edge_embed_dim: 100
+embed_dim: 16
+edge_dims: [64,64] 
+attn_dims: [16,32]
+attn_heads: [8,8]
+classifier_attn_heads: 8
+nlayers_set2set: 1
+niters_set2set: 2
+hidden_layer_sizes_output: [32,16,1]

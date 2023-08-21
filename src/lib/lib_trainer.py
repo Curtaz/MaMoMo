@@ -178,8 +178,8 @@ class PL_EGAT(pl.LightningModule):
             return torch.mean(100.0 - error)
         
     def training_step(self, train_batch, batch_idx=None, optimizer_idx=None):
-        g,state, y = train_batch
-        y_hat = self(g,state)
+        g, y = train_batch
+        y_hat = self(g)
         loss = self.criterion(y_hat, y)
         acc = self.accuracy(y_hat, y)
         mae = self.mae(y_hat, y)
@@ -189,10 +189,10 @@ class PL_EGAT(pl.LightningModule):
         self.train_mae_step_holder.append(mae)
 
         return loss
-    
+
     def validation_step(self, val_batch, batch_idx=None):
-        g,state, y  = val_batch
-        y_hat = self(g,state)
+        g, y  = val_batch
+        y_hat = self(g)
         loss = self.criterion(y_hat, y)
         acc = self.accuracy(y_hat, y)
         mae = self.mae(y_hat, y)
@@ -204,8 +204,8 @@ class PL_EGAT(pl.LightningModule):
         return loss
 
     def test_step(self, test_batch, batch_idx=None):
-        g,state,(y,ids) = test_batch
-        y_hat = self(g,state)
+        g,(y,ids) = test_batch
+        y_hat = self(g)
         error, predictions = self.accuracy(y_hat, y, test_step=True)
         mae = self.mae(y_hat, y, test_step=True)
         self.errors = [*self.errors, *error.tolist()]

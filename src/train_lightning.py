@@ -32,7 +32,7 @@ def write_results_yaml(cfg: dict, data: dict = None):
             yaml.dump(data, outfile)
 
 
-def get_model_name(model: GrapheNet2):
+def get_model_name(model):
     raw_name = str(type(model.net))
     chars_to_remove = "<>'"
     translate_table = str.maketrans("", "", chars_to_remove)
@@ -59,7 +59,7 @@ def main(cfg):
     os.environ.setdefault('DGLBACKEND','pytorch')
     seed_everything(42, workers=True)
 
-    model = GrapheNet2(cfg)
+    model = PL_EGAT(cfg)
     if cfg.train.compile:
         pass 
         # model = torch.compile(model)

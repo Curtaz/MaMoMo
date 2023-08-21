@@ -1,0 +1,19 @@
+base_lr: 0.001
+
+optimizer:
+  name: 'adam'
+  args: 
+    lr: 0.001
+
+scheduler:
+  name: "cosine-annealing-with-restarts"
+  args:
+    warmup_epochs: 30
+    init_decay_epochs: 100
+    min_decay_lr: 0.0001
+    restart_interval : 30
+    restart_interval_multiplier: null
+    restart_lr: 0.00007
+    warmup_start_lr: 0.00003
+    last_epoch: -1
+    verbose: false

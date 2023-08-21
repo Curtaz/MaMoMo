@@ -22,12 +22,18 @@ class PL_EGAT(pl.LightningModule):
         super(PL_EGAT,self).__init__()
         
         # Training Hyperparameters
-        self.learning_rate = cfg.train.base_lr 
         self.target = cfg.target
         self.num_epochs = cfg.train.num_epochs
         self.batch_size = cfg.train.batch_size
         self.normalize = cfg.train.normalize
         self.do_bond_expansion = cfg.train.do_bond_expansion
+
+
+        self.scheduler = cfg.optim.scheduler.name
+        self.scheduler_args = cfg.optim.scheduler.args
+
+        self.optimizer = cfg.optim.optimizer.name
+        self.optimizer_args = cfg.optim.optimizer.args
 
         self.count = 0
         self.errors = []
@@ -98,23 +104,21 @@ class PL_EGAT(pl.LightningModule):
         return out
 
     def configure_optimizers(self):
-        opt = torch.optim.Adam(
-            self.parameters(),
-            lr=self.learning_rate,
-            )        
-    
-        scheduler = CyclicCosineDecayLR(
-            opt, 
-            init_decay_epochs=100,
-            min_decay_lr=self.learning_rate * 0.1,
-            restart_interval = 30,
-            restart_interval_multiplier = None,
-            restart_lr=self.learning_rate * 0.7,
-            warmup_epochs = 30,
-            warmup_start_lr = self.learning_rate * 0.3,
-            last_epoch = -1,
-            verbose = False)
         
+        if self.optimizer == 'adam':
+            opt = torch.optim.Adam(
+                self.parameters(),
+                **self.optimizer_args
+                )        
+        else: raise NotImplementedError('Ops!')
+        
+
+        if self.scheduler == 'cosine-annealing-with-restarts':
+            scheduler = CyclicCosineDecayLR(
+                opt, 
+                **self.scheduler_args)
+
+
         return {
             "optimizer": opt,
             "lr_scheduler": {

@@ -22,17 +22,12 @@ def main(cfg):
         print(name,param.numel(),param.shape)
         tot_params+=param.numel()
     print("Tot params =",tot_params)
-    dataloader = PLGraphDataLoader(cfg)
-    dataloader.setup()
-    print('Loaded data')
-    g,_,y= next(iter(dataloader.train_dataloader()))
-    print('Next OK')
+    dataset = BruttoDataset()
+    g,y = dataset[0]
     print(model(g)) 
 
 
-    g,_,(y,name)= next(iter(dataloader.test_dataloader()))
-    print(model(g))
-    print(name)
+    model.configure_optimizers()
 
 def train(cfg):
     model = PL_EGAT(cfg)

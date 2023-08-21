@@ -17,7 +17,7 @@ def write_results_yaml(cfg: dict, data: dict = None):
         train_data = {
             "target": cfg.target,
             "num_epochs": cfg.train.num_epochs,
-            "learning_rate": cfg.train.base_lr,
+            "learning_rate": cfg.optim.base_lr,
             "batch_size": cfg.train.batch_size,
             "dataset": cfg.train.spath,
         }

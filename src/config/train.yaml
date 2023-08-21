@@ -1,5 +1,6 @@
 defaults: 
   - model: EGAT
+  - optim: default
   - _self_
 
 experiment : QM9 # name of the experiment, influences wandb run names, models and logs directories
@@ -11,18 +12,18 @@ deterministic : True
 home_dir : C:/Users/tomma/Documents/Uni/Magistrale/Internship/Code
 hydra:
   run:
-    dir: ${home_dir}/MaMoMo/lightning/logs/${experiment}/${target}/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${home_dir}/MaMoMo/logs/${experiment}/${target}/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 logger:
   project_name: MEGNet-${experiment}-locale
   user: tcortecchia
-  logdir : ${home_dir}}/MaMoMo/lightning/logs/${experiment}/${target}
+  logdir : ${home_dir}/MaMoMo/logs/${experiment}/${target}
 
 train: 
   do_bond_expansion: false
   compile: false
   spath : ${home_dir}/data
-  dpath : ${home_dir}}/MaMoMo/lightning/models/${experiment}/${target}
+  dpath : ${home_dir}/MaMoMo/models/${experiment}/${target}
   sfilename: ${experiment}_graphs.bin
   splitfilename: ${experiment}_splits.json
   

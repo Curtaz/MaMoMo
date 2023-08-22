@@ -343,11 +343,12 @@ class PLEGATNodePredictor(PLEGATBase):
         return super(PLEGATNodePredictor,self).forward(g,n,e)['node']
 
     def criterion(self, logits, labels):
+        labels = labels.long()
         ce = nn.CrossEntropyLoss()
         return ce(logits,labels)
     
     def accuracy(self, logits, labels, test_step=False):
-        
+        labels = labels.long()
         pred = logits.argmax(1)
         acc = (pred == labels).float().mean()
 
@@ -378,7 +379,9 @@ class PLEGATNodePredictor(PLEGATBase):
 
     def validation_step(self, val_batch, batch_idx=None):
         g, _ = val_batch
+
         node_types = g.ndata['node_type']
+
         node_feat,mask = self.mask_labels(node_types)
 
         if self.do_bond_expansion: 

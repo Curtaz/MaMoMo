@@ -46,7 +46,7 @@ train:
   val_split: 0.1
   test_split: 0.1
 
-  num_epochs: 1#500
+  num_epochs: 1 #500
   batch_size: 64
 
   es_patience: 32

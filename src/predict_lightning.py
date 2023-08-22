@@ -30,7 +30,7 @@ def r2_score(y_true,y_pred):
     SST = np.sum((y_true - mean_y) ** 2)
     return 1 - SSR / SST
 
-def plot_fit(y,y_hat):
+def plot_fit(y,y_hat,dpath,target):
     min = np.min([np.min(y), np.min(y_hat)])
     max = np.max([np.max(y), np.max(y_hat)])
 
@@ -43,7 +43,7 @@ def plot_fit(y,y_hat):
     
     outer = gridspec.GridSpec(2, 1, height_ratios = [19,1],
                                 left=0.1, right=0.9, bottom=0.1, top=0.9,hspace=0.2
-                              ) 
+                              )
     gs1 = gridspec.GridSpecFromSubplotSpec(3, 2,
                                            subplot_spec = outer[0],
                                            height_ratios=(.1,1,7),
@@ -52,7 +52,7 @@ def plot_fit(y,y_hat):
     gs2 = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec = outer[1], width_ratios=(7, 1),wspace=0.01)
 
     ax_title = fig.add_subplot(gs1[0,0])
-    ax_title.set_title(f"Eform - R2 = {r2_score(y,y_hat):.3f}")
+    ax_title.set_title(f"{target} - R2 = {r2_score(y,y_hat):.3f}")
     ax_title.axis('off')
 
     ax_plot = fig.add_subplot(gs1[2, 0])
@@ -74,7 +74,7 @@ def plot_fit(y,y_hat):
     ax_cbar = fig.add_subplot(gs2[0,0])
     cbar = fig.colorbar(sc, cax=ax_cbar, orientation='horizontal')
     cbar.set_label("Absolute Error (eV/atom)")
-
+    plt.savefig(str(dpath))
     return fig
 
 def write_csv_results(y: list,
@@ -103,7 +103,7 @@ def main(cfg):
     else:
         checkpoints = get_checkpoint_name(Path(cfg.train.dpath))
 
-    model = GrapheNet2(cfg)
+    model = PL_EGAT(cfg)
 
     dataloaders = PLGraphDataLoader(cfg)
 
@@ -140,18 +140,18 @@ def main(cfg):
     ) as outfile:
         yaml.dump(performance, outfile)
 
-    plot_fit(
-        y=model.plot_y,
-        y_hat=model.plot_y_hat,
-        dpath=Path(cfg.train.dpath).joinpath(f"{cfg.target}_fit.png"),
-        target=cfg.target,
-    )
-
     write_csv_results(
         y=model.plot_y,
         y_hat=model.plot_y_hat,
         names=model.sample_ids,
         dpath=Path(cfg.train.dpath).joinpath(f"{cfg.target}_prediction_results.csv"),
+        target=cfg.target,
+    )
+
+    plot_fit(
+        y=model.plot_y,
+        y_hat=model.plot_y_hat,
+        dpath=Path(cfg.train.dpath).joinpath(f"{cfg.target}_fit.png"),
         target=cfg.target,
     )
 

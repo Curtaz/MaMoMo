@@ -1,6 +1,6 @@
 import os
 import hydra
-from lib.lib_trainer import PL_EGAT
+from lib.lib_trainer import *
 from lib.lib_data import PLGraphDataLoader
 import dgl
 from pytorch_lightning import Trainer
@@ -17,25 +17,20 @@ def main(cfg):
 
     os.environ.setdefault('DGLBACKEND','pytorch')
     tot_params = 0
-    model = PL_EGAT(cfg)
+    model = PLEGATNodePredictor(cfg)
+    print(model)
     for name,param in model.named_parameters():
         print(name,param.numel(),param.shape)
         tot_params+=param.numel()
     print("Tot params =",tot_params)
-    dataloader = PLGraphDataLoader(cfg)
-    dataloader.setup()
-    print('Loaded data')
-    g,_,y= next(iter(dataloader.train_dataloader()))
-    print('Next OK')
-    print(model(g)) 
+    dataset = BruttoDataset()
+    g,y = dataset[0]
+    print(model(g,g.ndata['node_type'],g.edata['bond_dist_exp'])) 
 
-
-    g,_,(y,name)= next(iter(dataloader.test_dataloader()))
-    print(model(g))
-    print(name)
+    train(cfg)
 
 def train(cfg):
-    model = PL_EGAT(cfg)
+    model = PLEGATNodePredictor(cfg)
     logger = CSVLogger(save_dir='testlog', name = "test_log",)
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
@@ -44,7 +39,7 @@ def train(cfg):
         deterministic=cfg.deterministic,
         accelerator="gpu",
         devices=1,
-        max_epochs=100,
+        max_epochs=10,
         callbacks=[
             model.get_progressbar(),
             lr_monitor,
@@ -58,9 +53,9 @@ def train(cfg):
 class BruttoDataset(Dataset):
     def __init__(self) -> None:
         super().__init__()
-        g = dgl.rand_graph(10,30)
+        g = dgl.rand_graph(10,80)
         g.ndata['node_type'] = torch.randint(0,8,(10,))
-        g.edata['bond_dist_exp'] = torch.randn(30,100)
+        g.edata['bond_dist_exp'] = torch.randn(80,100)
         self.g = g
     def __getitem__(self, index) -> Any:
         return self.g, torch.rand(1)

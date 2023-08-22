@@ -45,7 +45,10 @@ class PLGraphDataLoader(LightningDataModule):
             assert self.train_split + self.val_split + self.test_split == 1
    
             graphs,target_dict =  load_graphs(str(Path(self.spath).joinpath(self.sfilename)))
-            targets = target_dict[self.target]
+            if self.target=="":
+                targets = torch.zeros(len(graphs))
+            else: 
+                targets = target_dict[self.target]
 
             indices = list(range(len(graphs))) 
             np.random.shuffle(indices)
@@ -70,7 +73,10 @@ class PLGraphDataLoader(LightningDataModule):
             ids = self._read_splits()     
 
             tr_graphs,target_dict = load_graphs(str(Path(self.spath).joinpath(self.sfilename)),idx_list=ids['train'])
-            targets = target_dict[self.target]
+            if self.target=="":
+                targets = torch.zeros(len(graphs))
+            else: 
+                targets = target_dict[self.target]
             tr_targets = targets[ids['train']]
             
             val_graphs,_ = load_graphs(str(Path(self.spath).joinpath(self.sfilename)),idx_list=ids['val'])

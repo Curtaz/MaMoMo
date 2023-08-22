@@ -3,11 +3,19 @@ defaults:
   - optim: default
   - _self_
 
-experiment : QM9 # name of the experiment, influences wandb run names, models and logs directories
-target : band_gap
+target: ""
+experiment : QM9-node # name of the experiment, influences wandb run names, models and logs directories
+dataset: QM9
 num_workers : 0
 cluster_num_workers :  8
 deterministic : True
+task_type: 2  # 1 property
+              # 2 node
+              # 3 edge
+              # 4 property + node
+              # 5 property + edge 
+              # 6 node + edge
+              # 7 property + node + edge
 
 home_dir : C:/Users/tomma/Documents/Uni/Magistrale/Internship/Code
 hydra:
@@ -15,7 +23,7 @@ hydra:
     dir: ${home_dir}/MaMoMo/logs/${experiment}/${target}/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 logger:
-  project_name: MEGNet-${experiment}-locale
+  project_name: MaMoMo-${experiment}-locale
   user: tcortecchia
   logdir : ${home_dir}/MaMoMo/logs/${experiment}/${target}
 
@@ -24,23 +32,25 @@ train:
   compile: false
   spath : ${home_dir}/data
   dpath : ${home_dir}/MaMoMo/models/${experiment}/${target}
-  sfilename: ${experiment}_graphs.bin
-  splitfilename: ${experiment}_splits.json
+  sfilename: ${dataset}_graphs.bin
+  splitfilename: ${dataset}_splits.json
   
   load_states: true
-  statesfilename: ${experiment}_states.bin
-  
+  statesfilename: ${dataset}_states.bin
+
+  normalize: null # one of null, z_score, normalization, log
+  infofile: ${dataset}_info.json
+
   load_and_split : true
   train_split: 0.8
   val_split: 0.1
   test_split: 0.1
 
-  normalize: null # one of null, z_score, normalization, log
-  infofile: ${experiment}_info.json
+  num_epochs: 1#500
+  batch_size: 64
 
-  base_lr : 0.001
-  num_epochs : 500
-  batch_size : 64
+  es_patience: 32
+  es_min_delta: 0.0001 
 
 predict: 
   specify_checkpoint: False

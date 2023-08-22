@@ -10,3 +10,4 @@ classifier_attn_heads: 8
 nlayers_set2set: 1
 niters_set2set: 2
 hidden_layer_sizes_output: [32,16,1]
+is_graph_classification: false

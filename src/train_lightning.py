@@ -59,7 +59,23 @@ def main(cfg):
     os.environ.setdefault('DGLBACKEND','pytorch')
     seed_everything(42, workers=True)
 
-    model = PL_EGAT(cfg)
+    if cfg.task_type == 1: # 1 property
+        model = PLEGATRegressor(cfg)
+    elif cfg.task_type == 2: # 2 node
+        model = PLEGATNodePredictor(cfg)
+    elif cfg.task_type == 3: # 3 edge
+        raise NotImplementedError('Ops!')
+    elif cfg.task_type == 4: # 4 property + node 
+        raise NotImplementedError('Ops!')
+    elif cfg.task_type == 5: # 5 property + edge
+        raise NotImplementedError('Ops!')
+    elif cfg.task_type == 6: # 6 node + edge
+        raise NotImplementedError('Ops!')
+    elif cfg.task_type == 7: # 7 property + node + edge
+        raise NotImplementedError('Ops!')
+    else: 
+        raise ValueError(f'task type={cfg.task_type} not recognized. Task type must be an integer between 1 and 7')
+
     if cfg.train.compile:
         pass 
         # model = torch.compile(model)
@@ -72,7 +88,7 @@ def main(cfg):
     )
 
     early_stopping = EarlyStopping(
-        monitor="val_loss", patience=35,min_delta=1e-5, verbose=True, check_on_train_epoch_end=False
+        monitor="val_loss", patience=cfg.train.es_patience,min_delta=cfg.train.es_min_delta, verbose=True, check_on_train_epoch_end=False
     )
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')

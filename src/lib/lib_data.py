@@ -74,9 +74,10 @@ class PLGraphDataLoader(LightningDataModule):
 
             tr_graphs,target_dict = load_graphs(str(Path(self.spath).joinpath(self.sfilename)),idx_list=ids['train'])
             if self.target=="":
-                targets = torch.zeros(len(graphs))
+                targets = torch.zeros_like(list(target_dict.values())[0])
             else: 
                 targets = target_dict[self.target]
+
             tr_targets = targets[ids['train']]
             
             val_graphs,_ = load_graphs(str(Path(self.spath).joinpath(self.sfilename)),idx_list=ids['val'])

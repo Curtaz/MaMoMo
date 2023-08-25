@@ -148,7 +148,7 @@ class PLEGATRegressor(PLEGATBase):
     def forward(self,g,n,e):
         return super(PLEGATRegressor,self).forward(g,n,e)['graph']
 
-    def criterion(self, output, target, data=None):
+    def criterion(self, output, target):
         l2 = nn.MSELoss()
 
         output = torch.squeeze(output)
@@ -469,5 +469,245 @@ class PLEGATNodePredictor(PLEGATBase):
         self.sample_ids.clear()
 
     def mask_labels(self,labels):
-        mask = torch.rand(len(labels),device=labels.device) < self.sample_frac
+        mask = torch.zeros(1)
+        while mask.sum() == 0:
+            mask = torch.rand(len(labels),device=labels.device) < self.sample_frac
+        return labels * ~mask, mask 
+    
+class PLEGATNodePredictorAndRegressor(PLEGATBase): 
+
+    def __init__(self,cfg,**kwargs):
+
+        super(PLEGATNodePredictorAndRegressor,self).__init__(cfg,**kwargs)
+
+        self.count = 0
+        self.node_accs = []
+        self.sample_ids = []
+
+
+        self.min_val_loss = float("inf")
+
+        self.sample_frac = 0.2
+
+        self.reg_errors = []
+        self.reg_maes = []
+        self.reg_plot_y = []
+        self.reg_plot_y_hat = []
+
+        self.train_loss_step_holder = []
+        self.train_node_acc_step_holder = []
+        self.train_property_acc_step_holder = []
+        self.train_property_mae_step_holder = []
+
+        self.val_loss_step_holder = []
+        self.val_node_acc_step_holder = []
+        self.val_property_acc_step_holder = []
+        self.val_property_mae_step_holder = []
+
+        self.test_node_acc = []
+        self.test_error_abs = []
+        self.test_error_rel = []
+        self.test_plot_y = []
+        self.test_plot_y_hat = []
+        self.test_sample_ids = []
+
+        self.min_val_loss = float("inf")
+
+    def criterion(self,output,node_labels,mask,target):
+        ce = nn.CrossEntropyLoss()
+        l2 = nn.MSELoss()
+
+        logits = output['node'][mask]
+        node_labels = node_labels.long()[mask]
+
+        y_hat = torch.squeeze(output['graph'])
+        if self.normalize == "z_score":
+            target = (target - self.mean) / self.std
+        elif self.normalize == "normalization":
+            target = (target - self.min) / (self.max - self.min)
+        elif self.normalize == "log":
+            target = torch.log(target + (self.min + 1))
+        
+        return (ce(logits,node_labels) + (torch.sqrt(l2(y_hat, target))
+                                      if self.target == "total_energy"
+                                      else l2(y_hat, target))
+                                      )
+    
+    def metrics(self, output,node_labels,mask,target, test_step=False):
+        
+        logits = output['node'][mask]
+        node_labels = node_labels.long()[mask]
+        pred = logits.argmax(1)
+
+        y_hat = torch.squeeze(output['graph'])
+        if self.normalize == "z_score":
+            y_hat = (y_hat * self.std) + self.mean
+        elif self.normalize == "normalization":
+            y_hat = y_hat * (self.max - self.min) + self.min
+        elif self.normalize == "log":
+            y_hat = torch.exp(y_hat) - (self.min + 1)
+
+
+        acc = (pred == node_labels).float().mean()
+        error = torch.abs(y_hat - target) 
+
+        error = torch.abs(y_hat - target)
+       
+        if test_step:
+            return {'node_acc' : acc,
+                    'property_error_rel' : error / torch.abs(target) * 100.0,
+                    'property_error_abs' : error
+                    }, output
+        else:
+            return {'node_acc' : acc,
+                    'property_error_rel' : torch.mean(100.0 - error / torch.abs(target) * 100.0),
+                    'property_error_abs' : torch.mean(error)
+                    }
+        
+    def training_step(self, train_batch, batch_idx=None, optimizer_idx=None):
+        g, y = train_batch
+        node_types = g.ndata['node_type']
+        node_feat,mask = self.mask_labels(node_types)
+
+        if self.do_bond_expansion: 
+            edge_feat = self.net.bond_expansion(g.edata['bond_dist'])
+        else: 
+            edge_feat = g.edata['bond_dist_exp']
+
+        pred = self(g,node_feat,edge_feat)
+
+        loss = self.criterion(pred,node_types,mask,y)
+        metrics = self.metrics(pred,node_types,mask,y)
+
+        self.train_loss_step_holder.append(loss)
+        self.train_node_acc_step_holder.append(metrics['node_acc'])
+        self.train_property_acc_step_holder.append(metrics['property_error_rel'])
+        self.train_property_mae_step_holder.append(metrics['property_error_abs'])
+        return loss
+
+    def validation_step(self, val_batch, batch_idx=None):
+        g, y = val_batch
+        node_types = g.ndata['node_type']
+        node_feat,mask = self.mask_labels(node_types)
+
+        if self.do_bond_expansion: 
+            edge_feat = self.net.bond_expansion(g.edata['bond_dist'])
+        else: 
+            edge_feat = g.edata['bond_dist_exp']
+
+        pred = self(g,node_feat,edge_feat)
+        
+        loss = self.criterion(pred,node_types,mask,y)
+        metrics = self.metrics(pred,node_types,mask,y)
+
+        self.val_loss_step_holder.append(loss)
+        self.val_node_acc_step_holder.append(metrics['node_acc'])
+        self.val_property_acc_step_holder.append(metrics['property_error_rel'])
+        self.val_property_mae_step_holder.append(metrics['property_error_abs'])
+        return loss
+
+    def test_step(self, test_batch, batch_idx=None):
+        g,(y,ids) = test_batch
+        node_types = g.ndata['node_type']
+        node_feat,mask = self.mask_labels(node_types)
+
+        if self.do_bond_expansion: 
+            edge_feat = self.net.bond_expansion(g.edata['bond_dist'])
+        else: 
+            edge_feat = g.edata['bond_dist_exp']
+
+        pred = self(g,node_feat,edge_feat)
+        metrics,predictions = self.metrics(pred,node_types,mask,y,test_step=True)
+
+        self.test_node_acc.clear()
+        self.test_error_abs.clear()
+        self.test_error_rel.clear()
+        self.test_plot_y.clear()
+        self.test_plot_y_hat.clear()
+        self.test_sample_ids.clear()
+
+        self.test_node_acc = [*self.test_node_acc, *metrics['node_acc'].tolist()]
+        self.test_error_abs = [*self.test_error_abs, *metrics['property_error_rel'].tolist()]
+        self.test_error_rel = [*self.test_error_rel, *metrics['property_error_abs'].tolist()]
+        self.test_plot_y = [*self.test_plot_y, *predictions['graph'].squeeze().tolist()]
+        self.test_sample_ids = [*self.test_sample_ids, *ids.cpu().numpy()]
+
+    def on_train_epoch_end(self):
+        loss = torch.stack(self.train_loss_step_holder).mean(dim=0)
+        node_acc = torch.stack(self.train_node_acc_step_holder).mean(dim=0)
+        property_acc = torch.stack(self.train_property_acc_step_holder).mean(dim=0)
+        property_mae = torch.stack(self.train_property_mae_step_holder).mean(dim=0)
+        
+        self.log(
+            "train_loss", loss, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+        self.log(
+            "train_node_acc", node_acc, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+        self.log(
+            "train_property_acc", property_acc, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+        self.log(
+            "train_property_mae", property_mae, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+
+        self.train_loss_step_holder.clear()
+        self.train_node_acc_step_holder.clear()
+        self.train_property_acc_step_holder.clear()
+        self.train_property_mae_step_holder.clear()
+
+    def on_validation_epoch_end(self):
+
+        loss = torch.stack(self.val_loss_step_holder).mean(dim=0)
+        node_acc = torch.stack(self.val_node_acc_step_holder).mean(dim=0)
+        property_acc = torch.stack(self.val_property_acc_step_holder).mean(dim=0)
+        property_mae = torch.stack(self.val_property_mae_step_holder).mean(dim=0)
+
+        self.log(
+            "val_loss", loss, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+        self.log(
+            "val_node_acc", node_acc, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+        self.log(
+            "val_property_acc", property_acc, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+        self.log(
+            "val_property_mae", property_mae, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
+        )
+
+        self.count += 1
+        if self.min_val_loss > loss:
+            print(
+                f"In epoch {self.current_epoch} reached a new minimum for validation loss: {loss}, patience: {self.count} epochs"
+            )
+            self.min_val_loss = loss
+            self.count = 0
+            
+        self.val_loss_step_holder.clear()
+        self.val_node_acc_step_holder.clear()
+        self.val_property_acc_step_holder.clear()
+        self.val_property_mae_step_holder.clear()
+            
+    def on_train_start(self):
+        self.log_dict(
+            {
+                "hp/num_epochs": float(self.num_epochs),
+                "hp/batch_size": float(self.batch_size),
+            }
+        )
+
+    def on_test_start(self):
+        self.test_node_acc.clear()
+        self.test_error_abs.clear()
+        self.test_error_rel.clear()
+        self.test_plot_y.clear()
+        self.test_plot_y_hat.clear()
+        self.test_sample_ids.clear()
+
+
+    def mask_labels(self,labels):
+        mask = torch.zeros(1)
+        while mask.sum() == 0:
+            mask = torch.rand(len(labels),device=labels.device) < self.sample_frac
         return labels * ~mask, mask 

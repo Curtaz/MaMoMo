@@ -66,7 +66,7 @@ def main(cfg):
     elif cfg.task_type == 3: # 3 edge
         raise NotImplementedError('Ops!')
     elif cfg.task_type == 4: # 4 property + node 
-        raise NotImplementedError('Ops!')
+        model = PLEGATNodePredictorAndRegressor(cfg)
     elif cfg.task_type == 5: # 5 property + edge
         raise NotImplementedError('Ops!')
     elif cfg.task_type == 6: # 6 node + edge

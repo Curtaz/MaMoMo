@@ -1,5 +1,5 @@
 name: 'EGAT'
-num_node_types: 93 # 92 elements of the periodic table + a special type for masked nodes
+num_node_types: 95 # 92 elements of the periodic table + a special type for masked nodes
 node_embed_dim: 16
 edge_embed_dim: 100
 embed_dim: 16

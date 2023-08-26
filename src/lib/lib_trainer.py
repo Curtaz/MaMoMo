@@ -548,16 +548,16 @@ class PLEGATNodePredictorAndRegressor(PLEGATBase):
             y_hat = torch.exp(y_hat) - (self.min + 1)
 
 
-        acc = (pred == node_labels).float().mean()
+        acc = (pred == node_labels).float()
         error = torch.abs(y_hat - target)
        
         if test_step:
-            return {'node_acc' : acc,
+            return {'node_acc' : acc  * 100.0,
                     'property_error_rel' : error / torch.abs(target) * 100.0,
                     'property_error_abs' : error
                     }, output
         else:
-            return {'node_acc' : acc,
+            return {'node_acc' : acc  * 100.0,
                     'property_error_rel' : 100.0 - error / torch.abs(target) * 100.0,
                     'property_error_abs' : error
                     }
@@ -632,9 +632,9 @@ class PLEGATNodePredictorAndRegressor(PLEGATBase):
 
     def on_train_epoch_end(self):
         loss = torch.stack(self.train_loss_step_holder).mean(dim=0)
-        node_acc = torch.stack(self.train_node_acc_step_holder).mean(dim=0)
-        property_acc = torch.stack(self.train_property_acc_step_holder).mean(dim=0)
-        property_mae = torch.stack(self.train_property_mae_step_holder).mean(dim=0)
+        node_acc = torch.cat(self.train_node_acc_step_holder).mean(dim=0)
+        property_acc = torch.cat(self.train_property_acc_step_holder).mean(dim=0)
+        property_mae = torch.cat(self.train_property_mae_step_holder).mean(dim=0)
         
         self.log(
             "train_loss", loss, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True
@@ -657,9 +657,9 @@ class PLEGATNodePredictorAndRegressor(PLEGATBase):
     def on_validation_epoch_end(self):
 
         loss = torch.stack(self.val_loss_step_holder).mean(dim=0)
-        node_acc = torch.stack(self.val_node_acc_step_holder).mean(dim=0)
-        property_acc = torch.stack(self.val_property_acc_step_holder).mean(dim=0)
-        property_mae = torch.stack(self.val_property_mae_step_holder).mean(dim=0)
+        node_acc = torch.cat(self.val_node_acc_step_holder).mean(dim=0)
+        property_acc = torch.cat(self.val_property_acc_step_holder).mean(dim=0)
+        property_mae = torch.cat(self.val_property_mae_step_holder).mean(dim=0)
 
         self.log(
             "val_loss", loss, on_epoch=True, prog_bar=True, logger=True, on_step=False,sync_dist=True

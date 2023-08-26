@@ -13,7 +13,7 @@ scheduler:
     min_decay_lr: 0.0001
     restart_interval : 30
     restart_interval_multiplier: null
-    restart_lr: 0.00007
-    warmup_start_lr: 0.00003
+    restart_lr: 0.0007
+    warmup_start_lr: 0.0003
     last_epoch: -1
     verbose: false

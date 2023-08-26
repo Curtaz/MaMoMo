@@ -549,8 +549,6 @@ class PLEGATNodePredictorAndRegressor(PLEGATBase):
 
 
         acc = (pred == node_labels).float().mean()
-        error = torch.abs(y_hat - target) 
-
         error = torch.abs(y_hat - target)
        
         if test_step:
@@ -560,8 +558,8 @@ class PLEGATNodePredictorAndRegressor(PLEGATBase):
                     }, output
         else:
             return {'node_acc' : acc,
-                    'property_error_rel' : torch.mean(100.0 - error / torch.abs(target) * 100.0),
-                    'property_error_abs' : torch.mean(error)
+                    'property_error_rel' : 100.0 - error / torch.abs(target) * 100.0,
+                    'property_error_abs' : error
                     }
         
     def training_step(self, train_batch, batch_idx=None, optimizer_idx=None):

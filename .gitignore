@@ -1,6 +1,10 @@
 logs
-models
 prediction_results
 src/test_dataloader.py
 src/lib/__pycache__/
 src/test_dataloader.py
+logs
+jobs
+.ipynb_checkpoints
+best_loss_val_loss*
+*train_results.yaml

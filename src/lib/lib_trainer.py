@@ -12,6 +12,7 @@ from pytorch_lightning.callbacks.progress.rich_progress import \
 from torch import nn
 from matgl.layers import BondExpansion
 from .scheduler import CyclicCosineDecayLR
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from .models import *
 
 class PLEGATBase(pl.LightningModule): 
@@ -76,7 +77,13 @@ class PLEGATBase(pl.LightningModule):
             scheduler = CyclicCosineDecayLR(
                 opt, 
                 **self.scheduler_args)
-
+            
+        elif self.scheduler == 'cosine-annealing':
+            scheduler = CosineAnnealingLR(
+                opt, 
+                **self.scheduler_args)
+            
+        else: raise NotImplementedError(f'Schdeuler {self.scheduler} not supported yet')
 
         return {
             "optimizer": opt,

@@ -8,7 +8,7 @@ optimizer:
 scheduler:
   name: "cosine-annealing"
   args:
-    T_max: 300 
-    eta_min: 0.0001
+    T_max: 500 
+    eta_min: 0.00005
     last_epoch: -1
     verbose: false

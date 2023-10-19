@@ -1,29 +1,28 @@
 defaults: 
-  - model: EGAT
-  - optim: default
+  - model: EGAT-small
+  - optim: cosine_decay
   - _self_
 
-target: ""
-experiment : QM9-node # name of the experiment, influences wandb run names, models and logs directories
-dataset: QM9
+target: "U0" # one of 'HOMO','LUMO','gap','ZPVE','mu','alpha','R2','U0_atom','U_atom','H_atom','G_atom','Cv','omega1'
+experiment : QM9 # name of the experiment, influences wandb run names, models and logs directories
+dataset: QM9 # Name of the dataset, used to simplify the data loading, you can specify names directly in 'train' parameters
 num_workers : 0
-cluster_num_workers :  8
-deterministic : True
-task_type: 2  # 1 property
+deterministic : True # Use a fixed random seed
+task_type: 1  # 1 property
               # 2 node
-              # 3 edge
+              # 3 edge (Not Implemented)
               # 4 property + node
-              # 5 property + edge 
-              # 6 node + edge
-              # 7 property + node + edge
+              # 5 property + edge (Not Implemented)
+              # 6 node + edge (Not Implemented)
+              # 7 property + node + edge (Not Implemented)
 
-home_dir : C:/Users/tomma/Documents/Uni/Magistrale/Internship/Code
+home_dir: /home/tomcort # just a shortcut to your home folder, you can directly specify paths when needed
 hydra:
   run:
     dir: ${home_dir}/MaMoMo/logs/${experiment}/${target}/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 logger:
-  project_name: MaMoMo-${experiment}-locale
+  project_name: MaMoMo-${experiment}
   user: tcortecchia
   logdir : ${home_dir}/MaMoMo/logs/${experiment}/${target}
 
@@ -32,10 +31,10 @@ train:
   compile: false
   spath : ${home_dir}/data
   dpath : ${home_dir}/MaMoMo/models/${experiment}/${target}
-  sfilename: ${dataset}_graphs.bin
-  splitfilename: ${dataset}_splits.json
+  sfilename: ${dataset}_graphs.bin # file containing the dataset
+  splitfilename: ${dataset}_splits.json # file containing split indices, 
   
-  load_states: true
+  load_states: false
   statesfilename: ${dataset}_states.bin
 
   normalize: null # one of null, z_score, normalization, log
@@ -46,11 +45,11 @@ train:
   val_split: 0.1
   test_split: 0.1
 
-  num_epochs: 1 #500
+  num_epochs: 500
   batch_size: 64
 
-  es_patience: 32
-  es_min_delta: 0.0001 
+  es_patience: 150
+  es_min_delta: 0
 
 predict: 
   specify_checkpoint: False

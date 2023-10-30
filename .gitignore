@@ -8,3 +8,4 @@ jobs
 .ipynb_checkpoints
 best_loss_val_loss*
 *train_results.yaml
+venv

@@ -99,7 +99,7 @@ def main(cfg):
 
     trainer = Trainer(
         deterministic=cfg.deterministic,
-        accelerator="gpu",
+        accelerator="auto",
         devices=1,
         max_epochs=cfg.train.num_epochs,
         callbacks=[

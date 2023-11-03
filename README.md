@@ -9,6 +9,7 @@ Ensure you have the following dependencies installed:
 
 - [Python](https://www.python.org/) (>=3.6)
 - [PyTorch](https://pytorch.org/) (>=1.6.0)
+- [DGL](https://www.dgl.ai/pages/start.html) (>=1.1.2)
 
 ### 2. Python Libraries
 
@@ -21,14 +22,15 @@ pip install -r requirements.txt
 - [NumPy](https://numpy.org/) (>=1.18.0)
 - [Matplotlib](https://matplotlib.org/) (>=3.1.0)
 - [Pytorch Lightning](https://lightning.ai/docs/pytorch/1.8.6/) (>=1.8.0,<=2.0.0)
-- [DGL](https://www.dgl.ai/pages/start.html) (>=1.1.2)
 - [matgl](https://pymatgen.org/installation.html) (==0.7.0)
 - [Hydra](https://hydra.cc/docs/intro/)(>=1.3.1)
 - [pymatgen](https://pymatgen.org/installation.html)
 
+
 ### 3. Hardware Requirements
 
 This project is optimized for GPU acceleration. Ensure you have access to a compatible GPU and install the necessary CUDA toolkit and cuDNN library. Visit [PyTorch's GPU support page](https://pytorch.org/get-started/locally/) for detailed instructions.
+Note that **DGL supports CUDA up to 11.8 version**, please make sure to check the compatibility with CUDA and *pytorch* versions.
 
 ### 4. Dataset
 [//]: <> (This is also a comment.)
@@ -69,6 +71,6 @@ Hydra allows configuration parameters to be overriden by command line arguments:
 python train_lightning.py train.num_epochs=500 train.batch_size==32 #hydra overrides are optional and refer to parameters in src/config files
 ```
 
-Data visualization and model evaluation are contained in notebooks at the moment (see `node_prediction.ipynb`, `graph_prediction.ipynb` and `node+graph_prediction.ipynb`) and is still a WIP.
+Data visualization and model evaluation are contained in notebooks at the moment (see `node_prediction.ipynb`, `graph_prediction.ipynb` and `node+graph_prediction.ipynb`) and are still a WIP.
 
 
